@@ -1,0 +1,14 @@
+body {
+  margin: 0;
+  font-family: "Montserrat",Helvetica,Arial,serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: "Montserrat",Helvetica,Arial,serif !important;
+}
+
+.text-center {
+  text-align: center;
+}
