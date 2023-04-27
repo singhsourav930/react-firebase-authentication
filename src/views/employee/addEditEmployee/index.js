@@ -1,76 +1,67 @@
 import React, { useState, useEffect } from "react";
 import { Validate } from "../../../helpers";
-import { Modal, Input, Button, TextArea } from "../../../theme/components";
+import { Modal, Input, Button, Switch } from "../../../theme/components";
+import { addDoc, updateDoc, getDoc } from "../../../configs/firebase";
+import { employeeCollectionRef } from "../../../configs/collections";
 
 const formData = {
-  firstName: "",
-  lastName: "",
+  name: "",
+  dob: "",
+  atWork: false,
   email: "",
-  packageId: "",
-  amountPaid: "",
-  amountDue: "",
-  notes: "",
-  phoneNumber: "",
-  expiryDate: "",
+  salary: "",
 };
 
 function AddEditEmployee(props) {
   const [form, setForm] = useState(formData);
+  const [isCreateUpdateEmployeeLoading, setIsCreateUpdateEmployeeLoading] =
+    useState(false);
   const {
     show = false,
     onClose = () => {},
     editId = "",
-    packageDropdownList = [],
-    isCreateUpdateUserLoading,
+    handleCallBackOnCompletedAddEdit = () => {},
   } = props;
   const [isFormSubmit, setIsFormSubmit] = useState(false);
+  const [isFeatchingEmployeeDetail, setIsFeatchingEmployeeDetail] =
+    useState(false);
 
+  useEffect(() => {
+    try {
+      const getEmployeeDetail = async () => {
+        setIsFeatchingEmployeeDetail(true);
+        const employeeData = await getDoc(employeeCollectionRef(editId));
+        if (employeeData && employeeData.data()) {
+          setForm(employeeData.data());
+        }
+        setIsFeatchingEmployeeDetail(false);
+      };
+      getEmployeeDetail();
+    } catch (e) {
+      setIsFeatchingEmployeeDetail(false);
+      alert(e?.message || e);
+    }
+  }, [editId]);
 
   const handleChange = (e) => {
-    //Caliculate the due amount on change amountPaid Based On OnChange
-    if (e.target.name === "amountPaid") {
-      if (!form?.packageId) {
-        alert("plz select package");
-        return;
-      }
-      const packageDetails = packageDropdownList?.filter(
-        (packageId) => packageId?.id === form?.packageId
-      );
-      const dueEmount = packageDetails[0]?.price - e.target.value;
-      //Check User Entered Value Should Be Lower then he Package Price
-      if (e.target.value > packageDetails[0]?.price) {
-        alert("Plz Enter Valid Amount");
-        return;
-      }
-      setForm({
-        ...form,
-        amountDue: dueEmount > 0 ? dueEmount : 0, //Prevent Negative Values
-        [e.target.name]:
-          e.target.value.trim() && parseInt(e.target.value.trim()),
-      });
-    } else {
-      setForm({
-        ...form,
-        [e.target.name]:
-          e.target.name === "notes" ? e.target.value : e.target.value.trim(),
-      });
+    if (e.target.name === "salary") {
+      e.target.value =
+        Math.round((Number(e.target.value) + Number.EPSILON) * 100) / 100;
     }
+    setForm({
+      ...form,
+      [e.target.name]:
+        e.target.name === "atWork" ? !form?.atWork : e.target.value,
+    });
   };
 
-  // ****************************
-  // * Validation Hanlder Start *
-  // ****************************
   const handleValidation = () => {
     let errorStructure = {
       errorEmail: "",
-      errorFirstName: "",
-      errorLastName: "",
+      errorName: "",
+      errorDob: "",
+      errorSalary: "",
       isValidated: false,
-      errorPackageId: "",
-      errorAmountPaid: "",
-      errornotes: "",
-      errorPhoneNumber: "",
-      errorExpiryDate: "",
     };
 
     if (!isFormSubmit) return errorStructure;
@@ -84,93 +75,54 @@ function AddEditEmployee(props) {
       };
     }
 
-    if (!form?.firstName) {
+    if (!form?.name) {
       errorStructure = {
         ...errorStructure,
-        errorFirstName: "Please enter first name",
+        errorName: "Please enter first name",
       };
-    } else if (!Validate.minLength(form?.firstName, 2)) {
+    } else if (!Validate.onlyCharacters(form?.name)) {
       errorStructure = {
         ...errorStructure,
-        errorFirstName: "Please enter valid first name",
+        errorName: "Only characters are allowed",
       };
-    }
-
-    if (!form?.lastName) {
+    } else if (!Validate.minLength(form?.name, 2)) {
       errorStructure = {
         ...errorStructure,
-        errorLastName: "Please enter last name",
-      };
-    } else if (!Validate.minLength(form?.lastName, 2)) {
-      errorStructure = {
-        ...errorStructure,
-        errorLastName: "Please enter valid last name",
+        errorName: "Min length should be 2",
       };
     }
-
-    if (!form?.packageId) {
+    if (!form?.dob) {
       errorStructure = {
         ...errorStructure,
-        errorPackageId: "Please select package",
-      };
-    } else if (!form?.packageId) {
-      errorStructure = {
-        ...errorStructure,
-        errorPackageId: "Please select package",
+        errorDob: "Please enter DOB",
       };
     }
-
-    if (!form?.amountPaid) {
+    if (!form?.salary) {
       errorStructure = {
         ...errorStructure,
-        errorAmountPaid: "Please enter amount paid",
+        errorSalary: "Please enter Salary",
       };
-    } else if (!form?.amountPaid) {
+    } else if (form?.salary && form?.salary === 0) {
       errorStructure = {
         ...errorStructure,
-        errorAmountPaid: "Please enter amount paid",
+        errorSalary: "Salary must be greater than 0",
       };
-    }
-    if (!form?.expiryDate) {
+    } else if (!Validate.checkDecimal(form?.salary)) {
       errorStructure = {
         ...errorStructure,
-        errorExpiryDate: "Please enter expire date",
-      };
-    } else if (!form?.expiryDate) {
-      errorStructure = {
-        ...errorStructure,
-        errorExpiryDate: "Please enter expire date",
+        errorSalary: "Salary must be in decimal form",
       };
     }
 
     if (
       !errorStructure?.errorEmail &&
-      !errorStructure?.errorFirstName &&
-      !errorStructure?.errorLastName
+      !errorStructure?.errorName &&
+      !errorStructure?.errorDob &&
+      !errorStructure?.errorSalary
     ) {
       errorStructure = {
         ...errorStructure,
         isValidated: true,
-      };
-    }
-
-    if (!form?.notes) {
-      errorStructure = { ...errorStructure, errornotes: "Please enter notes" };
-    } else if (!Validate.minLength(form?.notes, 2)) {
-      errorStructure = {
-        ...errorStructure,
-        errornotes: "Please enter valid notes",
-      };
-    }
-    if (!form?.phoneNumber) {
-      errorStructure = {
-        ...errorStructure,
-        errorPhoneNumber: "Please enter Phone Number",
-      };
-    } else if (!Validate.minLength(form?.phoneNumber, 12)) {
-      errorStructure = {
-        ...errorStructure,
-        errorPhoneNumber: "Please enter valid Phone Number",
       };
     }
 
@@ -197,88 +149,131 @@ function AddEditEmployee(props) {
     }
   }, [isFormSubmit]);
 
-  //User Update And Creation 3rd Step
-  const handleSubmit = () => {
-    const { isValidated } = handleValidation();
-    if (!isValidated) return;
-    const params = {
-      ...form,
-    };
-    if (editId) {
-    } else {
+  const handleSubmit = async () => {
+    try {
+      const { isValidated } = handleValidation();
+      if (!isValidated) return;
+
+      setIsCreateUpdateEmployeeLoading(true);
+      if (editId) {
+        await updateDoc(employeeCollectionRef(editId), form);
+        commonFunctions();
+        alert("Employee Updated successfully!");
+      } else {
+        await addDoc(employeeCollectionRef(), form);
+        commonFunctions();
+        alert("Employee Added successfully!");
+      }
+      setIsCreateUpdateEmployeeLoading(false);
+    } catch (e) {
+      alert(e?.message || e);
+      setIsCreateUpdateEmployeeLoading(false);
     }
   };
-  const { errorFirstName, errorLastName, errorEmail, errornotes } =
-    handleValidation();
+
+  const commonFunctions = () => {
+    onClose();
+    handleCallBackOnCompletedAddEdit();
+  };
+
+  const { errorName, errorDob, errorEmail, errorSalary } = handleValidation();
 
   return (
     <div>
       <Modal
         show={show}
         onClose={onClose}
-        title={<h4>{editId ? "Edit" : "Create New"} Employee</h4>}
+        title={
+          <h4>
+            {isFeatchingEmployeeDetail ? (
+              "Fetching.."
+            ) : (
+              <>{editId ? "Edit" : "Create New"} Employee</>
+            )}
+          </h4>
+        }
       >
-        <Input
-          className="mb-2"
-          label="First Name"
-          name="firstName"
-          placeholder="First name"
-          maxWidth="100%"
-          onChange={handleChange}
-          disabled={editId}
-          value={form.firstName}
-          isError={Boolean(errorFirstName)}
-          errorMessage={errorFirstName}
-        />
-        <Input
-          className="mb-2"
-          label="Last Name"
-          name="lastName"
-          placeholder="Last name"
-          maxWidth="100%"
-          disabled={editId}
-          onChange={handleChange}
-          value={form.lastName}
-          isError={Boolean(errorLastName)}
-          errorMessage={errorLastName}
-        />
-
-        <Input
-          className="mb-2"
-          label="Email"
-          name="email"
-          placeholder="Email"
-          maxWidth="100%"
-          onChange={handleChange}
-          disabled={editId}
-          value={form.email}
-          isError={Boolean(errorEmail)}
-          errorMessage={errorEmail}
-        />
-
-        <TextArea
-          className="mb-2"
-          label="Please enter the deadline of the pending payment"
-          name="notes"
-          placeholder="Notes"
-          maxWidth="100%"
-          onChange={handleChange}
-          value={form?.notes}
-          isError={Boolean(errornotes)}
-          errorMessage={errornotes}
-        />
+        <div className="row">
+          <div className="col-6">
+            <Input
+              className="mb-2"
+              label="Employee Name"
+              name="name"
+              placeholder="Employee name"
+              maxWidth="100%"
+              onChange={handleChange}
+              value={form.name}
+              isError={Boolean(errorName)}
+              errorMessage={errorName}
+            />
+          </div>
+          <div className="col-6">
+            <Input
+              className="mb-2"
+              label="Email"
+              name="email"
+              placeholder="Email"
+              maxWidth="100%"
+              onChange={handleChange}
+              disabled={editId}
+              value={form.email}
+              isError={Boolean(errorEmail)}
+              errorMessage={errorEmail}
+            />
+          </div>
+          <div className="col-6">
+            <Input
+              className="mb-2"
+              label="Date of birth"
+              name="dob"
+              placeholder="DOB"
+              maxWidth="100%"
+              onChange={handleChange}
+              max={new Date().toISOString().split("T")[0]}
+              type="date"
+              value={form.dob}
+              isError={Boolean(errorDob)}
+              errorMessage={errorDob}
+            />
+          </div>
+          <div className="col-6">
+            <div> At work</div>
+            <div className="pt-2">
+              <Switch
+                checked={form?.atWork}
+                {...(form?.atWork ? { secondary: "secondary" } : "")}
+                name="atWork"
+                onChange={handleChange}
+              />
+            </div>
+          </div>{" "}
+          <div className="col-6">
+            <Input
+              className="mb-2"
+              label="Salary"
+              name="salary"
+              placeholder=""
+              maxWidth="100%"
+              onChange={handleChange}
+              type="number"
+              value={form.salary}
+              isError={Boolean(errorSalary)}
+              errorMessage={errorSalary}
+            />
+          </div>
+        </div>
 
         <Button
           className="mt-2"
           small
-          disabled={isCreateUpdateUserLoading}
+          disabled={isCreateUpdateEmployeeLoading}
           onClick={onSubmit}
         >
-          {isCreateUpdateUserLoading
+          {isCreateUpdateEmployeeLoading
             ? "Loading..."
             : editId
-            ? "Update User"
-            : "Create User"}
+            ? "Update Employee"
+            : "Create New Employee"}
         </Button>
       </Modal>
     </div>

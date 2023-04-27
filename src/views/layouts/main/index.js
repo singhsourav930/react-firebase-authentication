@@ -13,7 +13,7 @@ function MainLayout(props) {
     <MainComponentBox>
       <Sidebar />
       <ContentBox>
-        <Header />
+        <Header {...props} />
         {/* <Button onClick={handleLogout}>Signout</Button> */}
         <ContentChildrenBox>{props?.children}</ContentChildrenBox>
       </ContentBox>

@@ -10,7 +10,7 @@ import {
   createUserWithEmailAndPassword,
   updateProfile,
 } from "../../configs/firebase";
-import { Validate } from "../../helpers";
+import { Validate, LStorage } from "../../helpers";
 import LoginPageLeftSideImg from "../../assets/images/loginpageleftsideimg.svg";
 import { useNavigate } from "react-router-dom";
 
@@ -89,14 +89,16 @@ function SignUp(props) {
       .then(async (res) => {
         if (res?.user) {
           try {
-            await updateProfile(res?.user, { displayName: params?.fullName });
+            const userData = await updateProfile(res?.user, {
+              displayName: params?.fullName,
+            });
+            LStorage.setUserData({ ...res, ...userData } || null);
           } catch (e) {
             alert(e?.message || e);
           }
           alert(
             "Congratulations!! you are registered Successfully. Please login"
           );
-          navigate("/login");
         } else {
           alert("something went wrong");
         }
@@ -111,7 +113,7 @@ function SignUp(props) {
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value.trim(),
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -144,7 +146,7 @@ function SignUp(props) {
             type="email"
             onChange={handleChange}
             name="email"
-            value={form.email}
+            value={form.email.trim()}
             isError={Boolean(errorEmail)}
             errorMessage={errorEmail}
             disabled={isLoading}

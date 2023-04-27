@@ -7,21 +7,16 @@ export const TooltipBox = styled.div`
   border-radius: 10px;
   position: absolute;
   ${(props) => `left:${props.points.x}px;
-  top:${props.points.y}px`};
+  top:${props.points.y}px;
+  display: ${props.points.isDisplay ? "block" : "none"}`};
   z-index: 1;
 `;
 
 export const TooltipListBox = styled.div`
-  padding: 5px 20px;
   cursor: pointer;
   &:hover {
     box-shadow: 1px 1px 15px rgba(0, 0, 0, 0.07);
     border-radius: 10px;
   }
-  &:first-child {
-    padding-top: 10px;
-  }
-  &:last-child {
-    padding-bottom: 10px;
-  }
+
 `;

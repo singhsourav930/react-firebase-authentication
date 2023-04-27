@@ -5,11 +5,11 @@ import SignUp from "../views/signup";
 import Dashboard from "../views/dashboard";
 import NotFound from "../views/notFound";
 import Employee from "../views/employee";
-const routes = (isLoggedIn) => [
+const routes = ({ isLoggedIn, userData }) => [
   {
     path: "/",
     element: isLoggedIn ? (
-      <MainLayout>
+      <MainLayout userData={userData}>
         <Outlet />
       </MainLayout>
     ) : (

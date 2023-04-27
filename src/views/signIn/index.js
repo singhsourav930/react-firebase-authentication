@@ -5,7 +5,7 @@ import {
   SignInRightSideBox,
 } from "./signIn.styled";
 import { Input, Button } from "../../theme/components";
-import { Validate } from "../../helpers";
+import { Validate, LStorage } from "../../helpers";
 import { auth, signInWithEmailAndPassword } from "../../configs/firebase";
 import LoginPageLeftSideImg from "../../assets/images/loginpageleftsideimg.svg";
 import { useNavigate } from "react-router-dom";
@@ -75,6 +75,7 @@ function SignIn(props) {
     setIsLoading(true);
     signInWithEmailAndPassword(auth, params.email, params.password)
       .then((res) => {
+        LStorage.setUserData(res || null);
         if (res) {
           navigate("/");
         } else {
@@ -91,7 +92,7 @@ function SignIn(props) {
   const handleChange = (e) => {
     setForm({
       ...form,
-      [e.target.name]: e.target.value.trim(),
+      [e.target.name]: e.target.value,
     });
   };
 
@@ -113,7 +114,7 @@ function SignIn(props) {
             type="email"
             onChange={handleChange}
             name="email"
-            value={form.email}
+            value={form.email.trim()}
             isError={Boolean(errorEmail)}
             errorMessage={errorEmail}
             disabled={isLoading}

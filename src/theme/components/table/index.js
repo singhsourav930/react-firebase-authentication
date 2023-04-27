@@ -11,6 +11,7 @@ import { Pagination } from "../pagination";
 export const Table = ({ ...props }) => {
   const columns = props?.columns || [];
   const row = props?.data || [];
+  const isFetching = props?.isFetching || false;
   return (
     <div>
       <TableBox>
@@ -54,17 +55,11 @@ export const Table = ({ ...props }) => {
               })}
           </tbody>
         </table>
+        {isFetching && <div className="text-center p-5"> Fetching...</div>}
       </TableBox>
-      {props?.totalItems && (
-        <TablePaginationBox>
-          <Pagination
-            totalItems={props?.totalItems}
-            pageNo={props?.pageNo}
-            totalPages={props?.totalPages}
-            onPageChange={(data) => props?.onPageChange && props?.onPageChange(data)}
-          />
-        </TablePaginationBox>
-      )}
+      <TablePaginationBox>
+        <Pagination {...props} />
+      </TablePaginationBox>
     </div>
   );
 };

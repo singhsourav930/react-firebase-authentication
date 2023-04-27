@@ -1,10 +1,10 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ThemeProvider } from "styled-components";
 import { GlobalStyles, lightTheme } from "../theme";
 import { useRoutes } from "react-router-dom";
 import { auth, onAuthStateChanged } from "../configs/firebase";
 import routes from "../routes";
-import { useState } from "react";
+import { LStorage } from "../helpers";
 
 function App(props) {
   const [authUser, setAuthUser] = useState(null);
@@ -14,6 +14,7 @@ function App(props) {
         setAuthUser(user);
       } else {
         setAuthUser(null);
+        LStorage.removeUserData();
       }
     });
 
@@ -21,7 +22,11 @@ function App(props) {
       listen();
     };
   }, []);
-  const routing = useRoutes(routes(Boolean(authUser)));
+
+  const userData = LStorage.getUserData() || authUser;
+  const routing = useRoutes(
+    routes({ isLoggedIn: Boolean(userData), userData })
+  );
 
   return (
     <div>

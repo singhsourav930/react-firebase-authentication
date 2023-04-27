@@ -7,12 +7,20 @@ class Validate {
       );
   };
 
+  static onlyCharacters = (data = "") => {
+    return String(data).match(/^[a-zA-Z]+$/);
+  };
+
   static minLength = (data = "", minLength) => {
     return data.length >= minLength;
   };
 
   static equalLength = (data = "", length) => {
     return data.length === length;
+  };
+
+  static checkDecimal = (number = "") => {
+    return String(number).match(/^[-+]?[0-9]+\.[0-9]+$/);
   };
 }
 

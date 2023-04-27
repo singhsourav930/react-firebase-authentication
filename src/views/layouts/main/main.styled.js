@@ -14,5 +14,5 @@ export const ContentBox = styled.div`
 `;
 
 export const ContentChildrenBox = styled.div`
-  margin-top: 50px;
+  margin-top: 60px;
 `;

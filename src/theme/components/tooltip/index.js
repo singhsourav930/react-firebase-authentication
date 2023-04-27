@@ -13,11 +13,13 @@ export const Tooltip = (props) => {
   const [points, setPoints] = useState({
     x: 0,
     y: 0,
+    isDisplay: false,
   });
 
   useEffect(() => {
     const elem = document.getElementById(activeTooltipId);
     setPoints({
+      isDisplay: true,
       x:
         window.scrollX +
           elem?.getBoundingClientRect().left +
@@ -62,10 +64,9 @@ export const Tooltip = (props) => {
       {activeTooltipId &&
         list &&
         list.map((data, index) => (
-          <>
+          <div key={index}>
             {(data?.render || data?.name || "") && (
               <TooltipListBox
-                key={index}
                 onClick={() => {
                   onSelect({ ...data, activeTooltipId });
                   closeActiveTooltipId("");
@@ -74,7 +75,7 @@ export const Tooltip = (props) => {
                 {data?.render || data?.name || ""}
               </TooltipListBox>
             )}
-          </>
+          </div>
         ))}
     </TooltipBox>
   );
